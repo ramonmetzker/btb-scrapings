@@ -60,10 +60,8 @@ if response.status_code == 200:
 
         cols = ['title','type','discount','price','original_price','art','platforms','link']
         records = [dict(zip(cols, row)) for row in values]
-        res = supabase.table('sony').insert(records).execute()
-        if res.status_code == 201:
-            print(f"Done Page {i}")
-        else:
-            print(f"Failed to do Page {i}")
+        supabase.table('sony').insert(records).execute()
+
+        print(f"Done Page {i}")
 
     print("End")
