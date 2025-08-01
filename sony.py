@@ -60,7 +60,7 @@ if response.status_code == 200:
 
         cols = ['title','type','discount','price','original_price','art','platforms','link']
         records = [dict(zip(cols, row)) for row in values]
-        supabase.table('sony').insert(records).execute()
+        supabase.table('sony').upsert(records, ignore_duplicates=True).execute()
 
         print(f"Done Page {i}")
 
