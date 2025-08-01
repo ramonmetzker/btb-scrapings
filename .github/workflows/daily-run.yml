@@ -1,4 +1,4 @@
-name: Daily Script Runner
+name: Sony Offers
 
 on:
   schedule:
