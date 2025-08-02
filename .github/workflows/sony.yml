@@ -2,8 +2,8 @@ name: Sony Offers
 
 on:
   schedule:
-    - cron: '0 6 * * *'  # Runs every day at 6 AM UTC
-  workflow_dispatch:  # Optional: lets you run it manually from GitHub
+    - cron: '0 10,16,22 * * *'
+  workflow_dispatch:
 
 jobs:
   run-script:
@@ -21,7 +21,7 @@ jobs:
     - name: Install dependencies
       run: pip install -r requirements.txt
 
-    - name: Run the script
+    - name: Run Sony Scrapping
       run: python sony.py
       env:
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
