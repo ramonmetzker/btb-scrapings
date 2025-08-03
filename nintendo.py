@@ -32,7 +32,7 @@ def upload_data(_data):
         values.append((
             hit['title'],
             hit['topLevelCategory'],
-            hit['price']['percentOff'],
+            -hit['price']['percentOff'],
             int(round(hit['price']['finalPrice'] * 100)),
             int(round(hit['price']['regPrice'] * 100)),
             f"https://assets.nintendo.com/image/upload/ar_16:9,c_lpad,w_656/b_white/f_auto/q_auto/{hit['productImage']}",
