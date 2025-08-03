@@ -9,6 +9,9 @@ ALGOLIA_API_KEY = os.getenv("ALGOLIA_API_KEY")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
 
+def parse_discount(discount_str):
+    return float(discount_str.replace("%", "").strip()) / 100
+
 def fetch_sales_page(page: int):
     body = {
       "filters": "(topLevelFilters:\"Promoções\")",
@@ -32,7 +35,7 @@ def upload_data(_data):
         values.append((
             hit['title'],
             hit['topLevelCategory'],
-            -hit['price']['percentOff'],
+            parse_discount(f"{-hit['price']['percentOff']}%"),
             int(round(hit['price']['finalPrice'] * 100)),
             int(round(hit['price']['regPrice'] * 100)),
             f"https://assets.nintendo.com/image/upload/ar_16:9,c_lpad,w_656/b_white/f_auto/q_auto/{hit['productImage']}",
