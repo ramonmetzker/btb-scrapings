@@ -43,8 +43,7 @@ def upload_data(_data):
     cols = ['title', 'type', 'discount', 'price', 'original_price', 'art', 'platforms', 'link']
     records = [dict(zip(cols, row)) for row in values]
     unique_records = [dict(t) for t in {tuple(sorted(d.items())) for d in records}]
-    print(unique_records)
-    supabase.table('sony').upsert(unique_records, on_conflict="title,price,link").execute()
+    supabase.table('nintendo').upsert(unique_records, on_conflict="title,price,link").execute()
 
 if __name__ == "__main__":
     initial = fetch_sales_page(0)
