@@ -14,7 +14,7 @@ db_url = os.getenv("TURSO_DB_URL")
 db_token = os.getenv("TURSO_AUTH_TOKEN")
 
 conn = libsql.connect(
-    syncurl=db_url,
+    sync_url=db_url,
     auth_token=db_token
 )
 
