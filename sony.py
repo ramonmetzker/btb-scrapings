@@ -2,6 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 import os
 from libsql import connect
+# import dotenv
+# dotenv.load_dotenv()
 
 def convert_price(price):
     normalized = price.replace("R$", "").replace(".", "").replace(",", ".").strip()
@@ -82,6 +84,7 @@ if response.status_code == 200:
                 """,
                 values
             )
+            conn.commit()
 
         print(f"✔️ Done Page {i}")
 
