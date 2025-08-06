@@ -70,19 +70,18 @@ if response.status_code == 200:
         print(f"[PAGE {i}] Total: {len(values)} games")
 
         if values:
-            with conn.transaction():
-                conn.executemany(
-                    """
-                    INSERT INTO sony (title, type, discount, price, original_price, art, platforms, link)
-                    VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
-                    ON CONFLICT(title, price, link) DO UPDATE SET
-                        discount = excluded.discount,
-                        original_price = excluded.original_price,
-                        art = excluded.art,
-                        platforms = excluded.platforms;
-                    """,
-                    values
-                )
+            conn.executemany(
+                """
+                INSERT INTO sony (title, type, discount, price, original_price, art, platforms, link)
+                VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+                ON CONFLICT(title, price, link) DO UPDATE SET
+                    discount = excluded.discount,
+                    original_price = excluded.original_price,
+                    art = excluded.art,
+                    platforms = excluded.platforms;
+                """,
+                values
+            )
 
         print(f"✔️ Done Page {i}")
 
