@@ -1,13 +1,13 @@
 import requests
-from supabase import create_client, Client
 import os
+from libsql import connect
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
+db_url = os.getenv("TURSO_DB_URL")
+db_token = os.getenv("TURSO_AUTH_TOKEN")
 ALGOLIA_ID = os.getenv("ALGOLIA_ID")
 ALGOLIA_API_KEY = os.getenv("ALGOLIA_API_KEY")
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+conn = connect(sync_url=db_url, auth_token=db_token, database="gamedeals")
 
 def parse_discount(discount_str):
     return float(discount_str.replace("%", "").strip()) / 100
@@ -43,10 +43,20 @@ def upload_data(_data):
             f"https://www.nintendo.com{hit['url']}"
         ))
 
-    cols = ['title', 'type', 'discount', 'price', 'original_price', 'art', 'platforms', 'link']
-    records = [dict(zip(cols, row)) for row in values]
-    unique_records = [dict(t) for t in {tuple(sorted(d.items())) for d in records}]
-    supabase.table('nintendo').upsert(unique_records, on_conflict="title,price,link").execute()
+    if values:
+        conn.executemany(
+            """
+            INSERT INTO nintendo (title, type, discount, price, original_price, art, platforms, link)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+            ON CONFLICT(title, price, link) DO UPDATE SET
+                discount = excluded.discount,
+                original_price = excluded.original_price,
+                art = excluded.art,
+                platforms = excluded.platforms;
+            """,
+            values
+        )
+        conn.commit()
 
 if __name__ == "__main__":
     initial = fetch_sales_page(0)

@@ -28,3 +28,5 @@ jobs:
         SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         ALGOLIA_ID: ${{ secrets.ALGOLIA_ID }}
         ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY }}
+        TURSO_DB_URL: ${{ secrets.TURSO_DB_URL }}
+        TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
