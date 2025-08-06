@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import os
-import libsql
+from libsql import connect
 
 def convert_price(price):
     normalized = price.replace("R$", "").replace(".", "").replace(",", ".").strip()
@@ -10,13 +10,11 @@ def convert_price(price):
 def parse_discount(discount_str):
     return float(discount_str.replace("%", "").strip()) / 100
 
+
 db_url = os.getenv("TURSO_DB_URL")
 db_token = os.getenv("TURSO_AUTH_TOKEN")
 
-conn = libsql.connect(
-    sync_url=db_url,
-    auth_token=db_token
-)
+conn = connect(sync_url=db_url, auth_token=db_token, database="gamedeals")
 
 url = "https://store.playstation.com/pt-br/category/3f772501-f6f8-49b7-abac-874a88ca4897/1?FULL_GAME=storeDisplayClassification"
 store = "https://store.playstation.com"
@@ -30,13 +28,15 @@ if response.status_code == 200:
 
     for ol in ols:
         lis = ol.find_all('li')
-        li = lis[-1]
-        span = li.find('span')
-        total_pages = int(span.getText())
-        print(f"[TOTAL PAGES]: {total_pages}")
-        print("==================================")
+        if lis:
+            li = lis[-1]
+            span = li.find('span')
+            total_pages = int(span.getText())
+            print(f"[TOTAL PAGES]: {total_pages}")
+            print("==================================")
 
     for i in range(1, total_pages + 1):
+        print(f"[FETCHING PAGE {i}]")
         page = requests.get(f"https://store.playstation.com/pt-br/category/3f772501-f6f8-49b7-abac-874a88ca4897/{i}?FULL_GAME=storeDisplayClassification")
         soup = BeautifulSoup(page.text, 'html.parser')
 
@@ -56,24 +56,33 @@ if response.status_code == 200:
             all_platforms = ", ".join(span.getText() for span in platforms)
             link = store + card.select_one('a.psw-link').attrs.get('href')
 
-            values.append((title, game_type, parse_discount(discount), convert_price(discount_price), convert_price(original_price), game_art, all_platforms, link))
+            values.append((
+                title,
+                game_type,
+                parse_discount(discount),
+                convert_price(discount_price),
+                convert_price(original_price),
+                game_art,
+                all_platforms,
+                link
+            ))
 
         print(f"[PAGE {i}] Total: {len(values)} games")
 
-        for record in values:
-            conn.execute(
-                """
-                INSERT INTO sony (title, type, discount, price, original_price, art, platforms, link)
-                VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
-                ON CONFLICT(title, price, link) DO UPDATE SET
-                    id=excluded.id,
-                    discount=excluded.discount,
-                    original_price=excluded.original_price,
-                    art=excluded.art,
-                    platforms=excluded.platforms;
-                """,
-                record
-            )
+        if values:
+            with conn.transaction():
+                conn.executemany(
+                    """
+                    INSERT INTO sony (title, type, discount, price, original_price, art, platforms, link)
+                    VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+                    ON CONFLICT(title, price, link) DO UPDATE SET
+                        discount = excluded.discount,
+                        original_price = excluded.original_price,
+                        art = excluded.art,
+                        platforms = excluded.platforms;
+                    """,
+                    values
+                )
 
         print(f"✔️ Done Page {i}")
 
